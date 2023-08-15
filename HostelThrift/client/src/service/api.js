@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 import { API_NOTIFICATION_MESSAGES, SERVICE_URLS } from '../constants/config';
-
+import { getAccessToken } from '../utils/common-utils';
 
 //backend url
 const API_URL = 'http://localhost:8000';
@@ -11,7 +11,9 @@ const axiosInstance = axios.create({
     //time in miliseconds for delay in response
     timeout: 10000, 
     headers: {
-        "content-type": "application/json"
+        "content-type": "application/json",
+        "Accept": "application/json, form-data", 
+        "Content-Type": "application/json"
     }
 });
 
@@ -107,7 +109,9 @@ for (const [key, value] of Object.entries(SERVICE_URLS)) {
             url: value.url,
             data: value.method === 'DELETE' ? '' : body,
             responseType: value.responseType,
-            
+            headers: {
+                authorization:getAccessToken()
+            },
             onUploadProgress: function(progressEvent) {
                 if (showUploadProgress) {
                     let percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
