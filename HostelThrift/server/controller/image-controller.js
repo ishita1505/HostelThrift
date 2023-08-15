@@ -1,8 +1,8 @@
-//image was in local directly, e upload it on mongoDb,it gives a url we pick the url and the moment we hit it on browser we can see the image on wesite
-
 import grid from 'gridfs-stream';
 import mongoose from 'mongoose';
+
 const url = 'http://localhost:8000';
+
 
 let gfs, gridfsBucket;
 const conn = mongoose.connection;
@@ -13,6 +13,7 @@ conn.once('open', () => {
     gfs = grid(conn.db, mongoose.mongo);
     gfs.collection('fs');
 });
+
 
 export const uploadImage = (request, response) => {
     if(!request.file) 

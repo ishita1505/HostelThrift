@@ -1,27 +1,19 @@
 import axios from 'axios';
 
 import { API_NOTIFICATION_MESSAGES, SERVICE_URLS } from '../constants/config';
-import { getAccessToken, getType } from '../utils/common-utils';
+import { getAccessToken, getRefreshToken, setAccessToken, getType } from '../utils/common-utils';
 
-//backend url
 const API_URL = 'http://localhost:8000';
 
 const axiosInstance = axios.create({
     baseURL: API_URL,
-    //time in miliseconds for delay in response
     timeout: 10000, 
     headers: {
-        "content-type": "application/json",
-        "Accept": "application/json, form-data", 
-        "Content-Type": "application/json"
+        "content-type": "application/json"
     }
 });
 
-
-//interceptor of request
 axiosInstance.interceptors.request.use(
-
-    //first callback function in case of successful request
     function(config) {
         if (config.TYPE.params) {
             config.params = config.TYPE.params
@@ -30,14 +22,11 @@ axiosInstance.interceptors.request.use(
         }
         return config;
     },
-    //second callback in case of failed req
     function(error) {
         return Promise.reject(error);
     }
 );
 
-
-//interceptor for response
 axiosInstance.interceptors.response.use(
     function(response) {
         // Stop global loader here
@@ -55,7 +44,6 @@ axiosInstance.interceptors.response.use(
 //////////////////////////////
 const processResponse = (response) => {
     if (response?.status === 200) {
-        //response is a object, data is a feild in this object hence, response.data
         return { isSuccess: true, data: response.data }
     } else {
         return {
@@ -73,32 +61,55 @@ const processResponse = (response) => {
 //////////////////////////////
 const ProcessError = async (error) => {
     if (error.response) {
-        // Request made and server responded with an error status code
-        console.log("ERROR IN RESPONSE: ", error);
-        return {
-            isError: true,
-            msg: API_NOTIFICATION_MESSAGES.responseFailure,
-            code: error.response.status
-        };
+        // Request made and server responded with a status code 
+        // that falls out of the range of 2xx
+        if (error.response?.status === 403) {
+            // const { url, config } = error.response;
+            // console.log(error);
+            // try {
+            //     let response = await API.getRefreshToken({ token: getRefreshToken() });
+            //     if (response.isSuccess) {
+                    sessionStorage.clear();
+            //         setAccessToken(response.data.accessToken);
+
+            //         const requestData = error.toJSON();
+
+            //         let response1 = await axios({
+            //             method: requestData.config.method,
+            //             url: requestData.config.baseURL + requestData.config.url,
+            //             headers: { "content-type": "application/json", "authorization": getAccessToken() },
+            //             params: requestData.config.params
+            //         });
+            //     }
+            // } catch (error) {
+            //     return Promise.reject(error)
+            // }
+        } else {
+            console.log("ERROR IN RESPONSE: ", error.toJSON());
+            return {
+                isError: true,
+                msg: API_NOTIFICATION_MESSAGES.responseFailure,
+                code: error.response.status
+            }
+        }
     } else if (error.request) { 
         // The request was made but no response was received
-        console.log("ERROR IN REQUEST: ", error);
+        console.log("ERROR IN RESPONSE: ", error.toJSON());
         return {
             isError: true,
             msg: API_NOTIFICATION_MESSAGES.requestFailure,
             code: ""
-        };
+        }
     } else { 
-        // Something happened in frontend setting up the request that triggered an Error
-        console.log("ERROR IN NETWORK: ", error);
+        // Something happened in setting up the request that triggered an Error
+        console.log("ERROR IN RESPONSE: ", error.toJSON());
         return {
             isError: true,
             msg: API_NOTIFICATION_MESSAGES.networkError,
             code: ""
-        };
+        }
     }
-};
-
+}
 
 const API = {};
 
@@ -107,12 +118,12 @@ for (const [key, value] of Object.entries(SERVICE_URLS)) {
         axiosInstance({
             method: value.method,
             url: value.url,
-            data: value.method === 'DELETE' ? '' : body,
+            data: value.method === 'DELETE' ? {} : body,
             responseType: value.responseType,
             headers: {
-                authorization:getAccessToken()
+                authorization: getAccessToken(),
             },
-            TYPE:getType(value, body),
+            TYPE: getType(value, body),
             onUploadProgress: function(progressEvent) {
                 if (showUploadProgress) {
                     let percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);

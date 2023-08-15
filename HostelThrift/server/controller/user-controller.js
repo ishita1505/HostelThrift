@@ -9,14 +9,8 @@ dotenv.config();
 
 export const singupUser = async (request, response) => {
     try {
-        //actual password=12345
-        //salt= random chars= efgu3ihfoi3yt
-        //hashed password = some hashing done on 12345 => for eg: 473648rg
-        //therefore final password to be displayed=salt+hashedpassword
-
         // const salt = await bcrypt.genSalt();
         // const hashedPassword = await bcrypt.hash(request.body.password, salt);
-        //above is the old syntax, below is the new syntax where saltlength=10
         const hashedPassword = await bcrypt.hash(request.body.password, 10);
 
         const user = { username: request.body.username, name: request.body.name, password: hashedPassword }
@@ -32,17 +26,12 @@ export const singupUser = async (request, response) => {
 
 
 export const loginUser = async (request, response) => {
-    //we need to find one object with the username for further checks
-    //user will have all the values stored in the object which has username same as request.body.username 
     let user = await User.findOne({ username: request.body.username });
     if (!user) {
-        //if no used found with the given username
         return response.status(400).json({ msg: 'Username does not match' });
     }
-        //if a used with given username was found 
+
     try {
-        //we encrypted our password before saving in the database
-        //so, now we need to decrypt it first
         let match = await bcrypt.compare(request.body.password, user.password);
         if (match) {
             const accessToken = jwt.sign(user.toJSON(), process.env.ACCESS_SECRET_KEY, { expiresIn: '15m'});
@@ -61,9 +50,9 @@ export const loginUser = async (request, response) => {
     }
 }
 
-// export const logoutUser = async (request, response) => {
-//     const token = request.body.token;
-//     await Token.deleteOne({ token: token });
+export const logoutUser = async (request, response) => {
+    const token = request.body.token;
+    await Token.deleteOne({ token: token });
 
-//     response.status(204).json({ msg: 'logout successfull' });
-// }
+    response.status(204).json({ msg: 'logout successfull' });
+}
