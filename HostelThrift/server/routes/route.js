@@ -1,7 +1,7 @@
 import express from 'express';
 import { loginUser, singupUser} from '../controller/user-controller.js';
 import { uploadImage, getImage} from '../controller/image-controller.js';
-import { createPost} from '../controller/post-controller.js';
+import { createPost, getAllPosts} from '../controller/post-controller.js';
 import {authenticateToken} from '../controller/jwt-controller.js';
 
 import upload from '../utils/upload.js';
@@ -19,5 +19,6 @@ router.get('/file/:filename', getImage);
 //npm i gridfs-stream-Easily stream files to and from mondoDb gridFs 
 
 router.post('/create', authenticateToken, createPost);
+router.get('/posts', authenticateToken, getAllPosts);
 
 export default router;
